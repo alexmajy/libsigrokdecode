@@ -73,17 +73,13 @@ class Decoder(srd.Decoder):
         len = es-ss
         # cope with 1, 2 and 4 bit wide traceport configuration
         bitList = [1 if bit[0] & (1 << n) else 0 for n in range(bit[1])]
-        self.buf = self.buf[(-32+bit[1]):] + bitList
-        if self.buf == [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0]:
-            self.put(es-1, es, self.out_ann, [0, ['SYNCFRAME']])
-            if self.foundSync == 1:
-                byte = self.bitsToBytes( self.buf[-8:] )
-                self.show(self.lastPos, es-1, byte)
+        self.buf = self.buf[(-16+bit[1]):] + bitList
+        if self.foundSync == 0  and self.buf == 15*[1] + [0]:
             self.foundSync = 1
             self.bitCnt = 0
             self.lastPos = es
         elif self.foundSync == 1:
-            self.bitCnt = self.bitCnt + 1
+            self.bitCnt = self.bitCnt + bit[1]
             if self.bitCnt == 8:
                 self.bitCnt = 0
                 byte = self.bitsToBytes( self.buf[-8:] )
